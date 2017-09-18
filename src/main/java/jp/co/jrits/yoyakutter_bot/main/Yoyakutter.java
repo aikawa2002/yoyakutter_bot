@@ -1,4 +1,4 @@
-package jp.co.jrits.main;
+package jp.co.jrits.yoyakutter_bot.main;
 
 import java.io.IOException;
 import java.util.ResourceBundle;
@@ -11,7 +11,8 @@ import org.riversun.slacklet.SlackletService;
 public class Yoyakutter {
 
     public static void main(String[] args) throws IOException {
-        ReplyMessageHandler handler = new ReplyMessageHandler();
+
+    	ReplyMessageHandler handler = new ReplyMessageHandler();
 
         String botToken = ResourceBundle.getBundle("credentials").getString("slack.bot_api_token");
 
