@@ -51,11 +51,11 @@ public class ReplyMessageHandler {
         // セッションを取得する（セッションはユーザー毎に固有）
         SlackletSession session = req.getSession();
 
-    	if (exception != null) {
+/*    	if (exception != null) {
             resp.reply(exception.getMessage());
 
     	}
-
+*/
         Map<String,Object> context = (Map<String,Object>) session.getAttribute("context", null);
 
         YoyakuConvEntity nextConv = yoyakuConv.reply(context, content);
@@ -108,7 +108,7 @@ public class ReplyMessageHandler {
     			}
     		} else if (type.equals("selectResource")) {
     			String rental = null;
-    			List<String> sysDate=new ArrayList();
+    			List<String> sysDate=new ArrayList<>();
     			for (Entity entity:entities) {
     				if (entity.getEntity().equals("category")) {
     					rental=entity.getValue();
@@ -125,7 +125,7 @@ public class ReplyMessageHandler {
     			}
     		} else if (type.equals("insertPlanTable")) {
     			String rental = null;
-    			List<String> sysDate=new ArrayList();
+    			List<String> sysDate=new ArrayList<>();
     			for (Entity entity:entities) {
     				if (entity.getEntity().equals("rental")) {
     					rental=entity.getValue();

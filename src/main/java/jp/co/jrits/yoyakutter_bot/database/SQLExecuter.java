@@ -26,15 +26,15 @@ public class SQLExecuter {
 			this.source = getDataSource();
 	}
 
-	public Collection<String> selectUser(String user) throws Exception {
+	public Collection<User> selectUser(String user) throws Exception {
 		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("SELECT name FROM user where name = ?");
+		PreparedStatement pstmt = con.prepareStatement("SELECT id,name FROM user where name = ?");
 		pstmt.setString(1, user);
 		ResultSet rset = pstmt.executeQuery();
 		Statement state = con.createStatement();
-        final Collection<String> names = new LinkedList<String>();
+        final Collection<User> names = new LinkedList<User>();
 		while(rset.next()) {
-            names.add(rset.getString(1));
+            names.add(new User(rset.getInt(1),rset.getString(2)));
 		}
 		return names;
 
@@ -42,13 +42,13 @@ public class SQLExecuter {
 
 	public Collection<Resource> selectResource(String rental) throws Exception {
 		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("SELECT resource.name,type_master.name FROM resource join type_master on resource.type_id = type_master.id where resource.name like ? or type_master.name like ?");
+		PreparedStatement pstmt = con.prepareStatement("SELECT resource.id,resource.name,type_master.name FROM resource join type_master on resource.type_id = type_master.id where resource.name like ? or type_master.name like ?");
 		pstmt.setString(1, "%" + rental + "%");
 		pstmt.setString(2, "%" + rental + "%");
 		ResultSet rset = pstmt.executeQuery();
         final Collection<Resource> names = new LinkedList<Resource>();
 		while(rset.next()) {
-            names.add(new Resource(rset.getString(1),rset.getString(2)));
+            names.add(new Resource(rset.getInt(1),rset.getString(2),rset.getString(3)));
 		}
 		return names;
 
@@ -112,15 +112,32 @@ public class SQLExecuter {
 
 	}
 
-	public int insertPlanResult(String rental,String mention,String sysDate) throws Exception {
+	public int insertPlanResult(String rental,String mention,String useFrom,String useTo,String reserveFrom,String reserveTo) throws Exception {
 		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("SELECT b.name,c.name,a.use_start,a.finish FROM plan_result a join resource b on a.resource_id = b.id join user c on a.user_id = c.id and c.name = ? where DATE_FORMAT( a.use_start  , '%Y-%m-%d')= str_to_date( ? , '%Y-%m-%d')");
-		pstmt.setString(1, mention);
-		pstmt.setString(2, sysDate);
+		PreparedStatement pstmt = con.prepareStatement("insert into plan_result(resource_id,user_id,user_start,finish,reserve_date,reserve_end) values (?,?,?,?,str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'))");
+		pstmt.setString(1, rental);
+		pstmt.setString(2, mention);
+		pstmt.setString(3, useFrom);
+		pstmt.setString(4, useTo);
+		pstmt.setString(5, reserveTo);
+		pstmt.setString(6, reserveFrom);
 		int rset = pstmt.executeUpdate();
 
 		return rset;
+	}
 
+	public int updatePlanResult(String rental,String mention,String useFrom,String useTo,String reserveFrom,String reserveTo) throws Exception {
+		Connection con = source.getConnection();
+		PreparedStatement pstmt = con.prepareStatement("insert into plan_result(resource_id,user_id,user_start,finish,reserve_date,reserve_end) values (?,?,?,?,str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'))");
+		pstmt.setString(1, rental);
+		pstmt.setString(2, mention);
+		pstmt.setString(3, useFrom);
+		pstmt.setString(4, useTo);
+		pstmt.setString(5, reserveTo);
+		pstmt.setString(6, reserveFrom);
+		int rset = pstmt.executeUpdate();
+
+		return rset;
 	}
 
 	public Collection<String> select1() throws Exception {
@@ -171,12 +188,22 @@ public class SQLExecuter {
 	}
 
 	public class Resource {
+		private int id;
 		private String resourceName;
 		private String typeName;
 
-		Resource(String resourceName, String typeName) {
+		Resource(int id, String resourceName, String typeName) {
+			this.id=id;
 			this.resourceName=resourceName;
 			this.typeName=typeName;
+		}
+
+		public int getId() {
+			return id;
+		}
+
+		public void setId(int id) {
+			this.id = id;
 		}
 
 		public String getResourceName() {
