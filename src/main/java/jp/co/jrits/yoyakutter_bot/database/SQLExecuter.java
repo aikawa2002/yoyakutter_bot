@@ -114,7 +114,7 @@ public class SQLExecuter {
 
 	public int insertPlanResult(String rental,String mention,String useFrom,String useTo,String reserveFrom,String reserveTo) throws Exception {
 		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("insert into plan_result(resource_id,user_id,user_start,finish,reserve_date,reserve_end) values (?,?,?,?,str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'))");
+		PreparedStatement pstmt = con.prepareStatement("insert into plan_result(resource_id,user_id,user_start,finish,reserve_date,reserve_end) values (?,?,?,?,str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'))");
 		pstmt.setString(1, rental);
 		pstmt.setString(2, mention);
 		pstmt.setString(3, useFrom);
@@ -126,15 +126,12 @@ public class SQLExecuter {
 		return rset;
 	}
 
-	public int updatePlanResult(String rental,String mention,String useFrom,String useTo,String reserveFrom,String reserveTo) throws Exception {
+	public int updatePlanResult(String rental,String mention,String finish) throws Exception {
 		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("insert into plan_result(resource_id,user_id,user_start,finish,reserve_date,reserve_end) values (?,?,?,?,str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'),str_to_date( ? , '%Y-%m-%d'))");
-		pstmt.setString(1, rental);
-		pstmt.setString(2, mention);
-		pstmt.setString(3, useFrom);
-		pstmt.setString(4, useTo);
-		pstmt.setString(5, reserveTo);
-		pstmt.setString(6, reserveFrom);
+		PreparedStatement pstmt = con.prepareStatement("update plan_result set finish = str_to_date( ? , '%Y-%m-%d %H:%i:%S') where resource_id = ? and user_id = ? and finish is null");
+		pstmt.setString(1, finish);
+		pstmt.setString(2, rental);
+		pstmt.setString(3, mention);
 		int rset = pstmt.executeUpdate();
 
 		return rset;
