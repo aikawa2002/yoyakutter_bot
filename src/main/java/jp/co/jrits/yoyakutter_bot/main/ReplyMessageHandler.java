@@ -1,7 +1,6 @@
 package jp.co.jrits.yoyakutter_bot.main;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,16 +9,12 @@ import java.util.Map;
 import org.riversun.slacklet.SlackletRequest;
 import org.riversun.slacklet.SlackletResponse;
 import org.riversun.slacklet.SlackletSession;
-import org.riversun.xternal.simpleslackapi.SlackAttachment;
-import org.riversun.xternal.simpleslackapi.SlackUser;
 
 import com.ibm.watson.developer_cloud.conversation.v1.model.Entity;
 
-import javafx.collections.transformation.SortedList;
 import jp.co.jrits.yoyakutter_bot.database.SQLExecuter;
 import jp.co.jrits.yoyakutter_bot.database.SQLExecuter.PlanResult;
 import jp.co.jrits.yoyakutter_bot.database.SQLExecuter.Resource;
-import jp.co.jrits.yoyakutter_bot.database.SQLExecuter.User;
 import jp.co.jrits.yoyakutter_bot.watson.YoyakuConversation;
 import jp.co.jrits.yoyakutter_bot.watson.YoyakuConversation.YoyakuConvEntity;
 
@@ -85,9 +80,10 @@ public class ReplyMessageHandler {
 
     private String execute(String type,String mention,List<Entity> entities) throws Exception {
     		StringBuffer buf = new StringBuffer();
+            System.out.println(type);
     		if (type.equals("searchPlanTable")) {
     			String category = null;
-    			List<String> sysDate=new ArrayList();
+    			List<String> sysDate=new ArrayList<>();
     			for (Entity entity:entities) {
     				if (entity.getEntity().equals("rental")) {
     					category=entity.getValue();
@@ -144,6 +140,23 @@ public class ReplyMessageHandler {
     			} else {
     		        buf.append("見つかりませんでした");
     			}
+            } else if (type.equals("selectRentalResource")) {
+                List<String> sysDate=new ArrayList<>();
+                for (Entity entity:entities) {
+                    if (entity.getEntity().equals("sys-date")) {
+                        sysDate.add(entity.getValue());
+                    }
+                    System.out.println(entity.getEntity() + entity.getValue());
+                }
+                Collection<PlanResult> plans = sqlexecuter.selectRentalResource("aic");
+                if (plans.size() > 0) {
+                    for(PlanResult plan:plans) {
+                        buf.append(plan.getResourceName() + ":" + plan.getUserName()+":" + plan.getStartTime()+":" + plan.getFinishTime()+"\n");
+
+                    }
+                } else {
+                    buf.append("見つかりませんでした");
+                }
     		}
     	return buf.toString();
     }

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -13,9 +12,6 @@ import java.util.ResourceBundle;
 
 import javax.sql.DataSource;
 
-import com.jcabi.jdbc.JdbcSession;
-import com.jcabi.jdbc.ListOutcome;
-import com.jcabi.jdbc.Outcome;
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 
@@ -31,7 +27,6 @@ public class SQLExecuter {
 		PreparedStatement pstmt = con.prepareStatement("SELECT id,name FROM user where name = ?");
 		pstmt.setString(1, user);
 		ResultSet rset = pstmt.executeQuery();
-		Statement state = con.createStatement();
         final Collection<User> names = new LinkedList<User>();
 		while(rset.next()) {
             names.add(new User(rset.getInt(1),rset.getString(2)));
@@ -112,6 +107,19 @@ public class SQLExecuter {
 
 	}
 
+    public Collection<PlanResult> selectRentalResource(String mention) throws Exception {
+        Connection con = source.getConnection();
+        PreparedStatement pstmt = con.prepareStatement("SELECT b.name,c.name,a.use_start,a.finish FROM plan_result a join resource b on a.resource_id = b.id join user c on a.user_id = c.id and c.name = ? where finish is null");
+        pstmt.setString(1, mention);
+        ResultSet rset = pstmt.executeQuery();
+
+        final Collection<PlanResult> names = new LinkedList<PlanResult>();
+        while(rset.next()) {
+            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4)));
+        }
+        return names;
+    }
+
 	public int insertPlanResult(String rental,String mention,String useFrom,String useTo,String reserveFrom,String reserveTo) throws Exception {
 		Connection con = source.getConnection();
 		PreparedStatement pstmt = con.prepareStatement("insert into plan_result(resource_id,user_id,user_start,finish,reserve_date,reserve_end) values (?,?,?,?,str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'))");
@@ -135,39 +143,6 @@ public class SQLExecuter {
 		int rset = pstmt.executeUpdate();
 
 		return rset;
-	}
-
-	public Collection<String> select1() throws Exception {
-	    Collection<String> names = new JdbcSession(source)
-	    	      .sql("SELECT name FROM user")
-	    	      .select(
-	    	        new Outcome<Collection<String>>() {
-						@Override
-						public Collection<String> handle(ResultSet rset, Statement arg1) throws SQLException {
-		    	            final Collection<String> names = new LinkedList<String>();
-		    	            while (rset.next()) {
-		    	              names.add(rset.getString(1));
-		    	            }
-		    	            return names;
-						}
-	    	        }
-	    	      );
-	    return names;
-	}
-
-	public List<User> selectUser1() throws Exception {
-		 return new JdbcSession(source)
-				   .sql("SELECT * FROM user")
-				   .select(new ListOutcome<User>(
-				       new ListOutcome.Mapping<User>() {
-				         @Override
-				         public User map(final ResultSet rset) throws SQLException {
-				        	 System.out.println("*******************");
-				           return new User(rset.getInt(1), rset.getString(2));
-				         }
-				       }
-				     )
-				   );
 	}
 
 	private DataSource getDataSource() throws IOException {
