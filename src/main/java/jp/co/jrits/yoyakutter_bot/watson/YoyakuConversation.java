@@ -35,6 +35,19 @@ public class YoyakuConversation {
 
 	}
 
+	public YoyakuConvEntity setContext(Map<String,Object>context) {
+        // sync
+        MessageRequest newMessage;
+        newMessage = new MessageRequest.Builder().context(context).build();
+        MessageResponse response = service.message("7ff1fcc6-7317-4493-aa31-83c528ec4b17", newMessage).execute();
+
+        Map<String,Object> map = response.getOutput();
+        System.out.println(map.toString());
+
+		return new YoyakuConvEntity(response.getContext(),map.get("text").toString().replace("[", "").replace("]",""),response.getEntities());
+
+	}
+
 	public class YoyakuConvEntity {
 		private Map<String,Object> context;
 		private String message;
