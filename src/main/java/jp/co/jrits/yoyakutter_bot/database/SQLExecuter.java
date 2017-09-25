@@ -45,26 +45,10 @@ public class SQLExecuter {
 		PreparedStatement pstmt = con.prepareStatement("SELECT resource.id,resource.name,type_master.name FROM resource join type_master on resource.type_id = type_master.id where resource.name like ? or type_master.name like ?");
 		pstmt.setString(1, "%" + rental + "%");
 		pstmt.setString(2, "%" + rental + "%");
-		System.out.println("selectResource:" + rental);
 		ResultSet rset = pstmt.executeQuery();
         final Collection<Resource> names = new LinkedList<Resource>();
 		while(rset.next()) {
             names.add(new Resource(rset.getInt(1),rset.getString(2),rset.getString(3)));
-		}
-		return names;
-
-	}
-
-	public Collection<Resource> selectResource(String bihinNumber,String rental) throws Exception {
-		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("SELECT resource.id,resource.name FROM resource where resource.name like ? and resource.name like ?");
-		pstmt.setString(1, "%" + bihinNumber + "%");
-		pstmt.setString(2, "%" + rental + "%");
-		System.out.println("selectResource:" + rental +":" + bihinNumber);
-		ResultSet rset = pstmt.executeQuery();
-        final Collection<Resource> names = new LinkedList<Resource>();
-		while(rset.next()) {
-            names.add(new Resource(rset.getInt(1),rset.getString(2),null));
 		}
 		return names;
 
@@ -113,35 +97,6 @@ public class SQLExecuter {
 
 	}
 
-	public Collection<PlanResult> selectRentalResource(String category,String mention) throws Exception {
-		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("SELECT b.name,c.name,a.use_start,a.finish FROM plan_result a join resource b on a.finish is null and a.resource_id = b.id join user c on a.user_id = c.id and c.name = ? where b.resource_name like ?");
-		pstmt.setString(1, mention);
-		pstmt.setString(2, "%" + category + "%");
-		ResultSet rset = pstmt.executeQuery();
-
-        final Collection<PlanResult> names = new LinkedList<PlanResult>();
-		while(rset.next()) {
-            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4)));
-		}
-		return names;
-
-	}
-
-	public Collection<PlanResult> selectRentalResource(String mention) throws Exception {
-		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("SELECT b.name,c.name,a.use_start,a.finish FROM plan_result a join resource b on a.finish is null and a.resource_id = b.id join user c on a.user_id = c.id and c.name = ?" );
-		pstmt.setString(1, mention);
-		ResultSet rset = pstmt.executeQuery();
-
-        final Collection<PlanResult> names = new LinkedList<PlanResult>();
-		while(rset.next()) {
-            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4)));
-		}
-		return names;
-
-	}
-
 	public Collection<PlanResult> selectPlanResult(String category,String mention,String sysDate) throws Exception {
 		Connection con = source.getConnection();
 		PreparedStatement pstmt = con.prepareStatement("SELECT b.name,c.name,a.use_start,a.finish FROM plan_result a join resource b on a.resource_id = b.id join user c on a.user_id = c.id and c.name = ? where DATE_FORMAT( a.use_start  , '%Y-%m-%d')= str_to_date( ? , '%Y-%m-%d')");
@@ -157,14 +112,15 @@ public class SQLExecuter {
 
 	}
 
-	public int insertPlanResult(String rental,String mention,String useFrom,String reserveFrom,String reserveTo) throws Exception {
+	public int insertPlanResult(String rental,String mention,String useFrom,String useTo,String reserveFrom,String reserveTo) throws Exception {
 		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("insert into plan_result(resource_id,user_id,use_start,reserve_date,reserve_end) values (?,?,str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'))");
+		PreparedStatement pstmt = con.prepareStatement("insert into plan_result(resource_id,user_id,user_start,finish,reserve_date,reserve_end) values (?,?,?,?,str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'),str_to_date( ? , '%Y-%m-%d %H:%i:%S'))");
 		pstmt.setString(1, rental);
 		pstmt.setString(2, mention);
 		pstmt.setString(3, useFrom);
-		pstmt.setString(4, reserveFrom);
+		pstmt.setString(4, useTo);
 		pstmt.setString(5, reserveTo);
+		pstmt.setString(6, reserveFrom);
 		int rset = pstmt.executeUpdate();
 
 		return rset;
