@@ -34,6 +34,8 @@ public class ReplyMessageHandler {
 	YoyakuConversation yoyakuConv;
 	SQLExecuter sqlexecuter;
 	Exception exception;
+	private Map<String,Object> context;
+
     public ReplyMessageHandler() {
         yoyakuConv = new YoyakuConversation();
         try {
@@ -53,21 +55,30 @@ public class ReplyMessageHandler {
         // セッションを取得する（セッションはユーザー毎に固有）
         SlackletSession session = req.getSession();
 
-        Map<String,Object> context = (Map<String,Object>) session.getAttribute("context", null);
+        context = (Map<String,Object>) session.getAttribute("context", null);
 
         YoyakuConvEntity nextConv = askConversation(context, content);
-        context = setDateToContext(nextConv);
+        context = nextConv.getContext();
 
 		// メッセージを送信したユーザーのメンションを取得する
 		String mention = req.getUserDisp();
+		resp.reply(nextConv.getMessage());
+		String message = access(nextConv,mention);
+		if (message != null) {
+			resp.reply(message);
+		}
+        session.setAttribute("context", context);
+    }
 
+    private String access(YoyakuConvEntity nextConv,String mention) {
+    	String message = null;
 		List<Entity> entities=nextConv.getEntities();
 		String type = (String) nextConv.getContext().get("type");
 
-		resp.reply(nextConv.getMessage());
-		if (type != null) {
+        setContext(nextConv);
+		if (type != null && !type.isEmpty()) {
             try {
-            	String message = execute(type,mention,context,entities);
+            	message = execute(type,mention,context,entities);
             	if (message.contains("resourceId")) {
                     String[] ids = message.split(":");
                     context.put("rental", ids[1]);
@@ -75,43 +86,76 @@ public class ReplyMessageHandler {
                     nextConv =setContxetOfConversation(context);
                     context = nextConv.getContext();
                     message = nextConv.getMessage();
+            	} else if (message.contains("userId")) {
+                    String[] ids = message.split(":");
+                    if (Integer.parseInt(ids[1]) > -1) {
+                        context.put("userid", ids[1]);
+                        nextConv =setContxetOfConversation(context);
+                        message = access(nextConv,mention);
+                    } else {
+                        message = "Yoyakutter にユーザ未登録です。管理者に登録を依頼してください。";
+                    }
             	}
-            	resp.reply(message);
     		} catch (Exception e) {
     			// TODO 自動生成された catch ブロック
     			e.printStackTrace();
-    	        resp.reply(e.getMessage());
+    	        message = e.getMessage();
     		}
+            context.put("type", "");
         }
-        session.setAttribute("context", context);
+    	return message;
     }
 
-    private Map<String,Object> setDateToContext(YoyakuConvEntity nextConv) {
-		Map<String,Object> contexts=nextConv.getContext();
+    private void setContext(YoyakuConvEntity nextConv) {
 		List<Entity> entities=nextConv.getEntities();
 
-		String dateTo = (String)contexts.get("dateto");
-		String date = (String)contexts.get("date");
-		for(String key:contexts.keySet()) {
-			System.out.println("Context:" +key +":" +contexts.get(key));
+		String dateTo = (String)context.get("dateto");
+		String time = (String)context.get("time");
+		String timeTo = (String)context.get("timeto");
+		String date = (String)context.get("date");
+		String category = (String)context.get("category");
+		for(String key:context.keySet()) {
+			System.out.println("Context:" +key +":" +context.get(key));
 		}
+		boolean updateFlg = false;
 
-		if (dateTo.isEmpty()) {
 			int index = 0;
+			int index2 = 0;
 			for (Entity entity:entities) {
 				if (entity.getEntity().equals("sys-date")) {
-					if (index == 1 || !date.isEmpty()) {
-						dateTo=entity.getValue();
-						contexts.put("dateto", dateTo);
-						setContxetOfConversation(contexts);
-					} else {
-						index++;
+					if (dateTo.isEmpty()) {
+						if (index == 1 || !date.isEmpty()) {
+							dateTo=entity.getValue();
+							context.put("dateto", dateTo);
+							updateFlg = true;
+						} else {
+							index++;
+						}
 					}
+				} else if (entity.getEntity().equals("sys-time")) {
+					if (timeTo.isEmpty()) {
+						if (index2 == 1 || !time.isEmpty()) {
+							timeTo=entity.getValue();
+							context.put("timeto", timeTo);
+							updateFlg = true;
+						} else {
+							index2++;
+						}
+					}
+				} else if (entity.getEntity().equals("category") && category.isEmpty()) {
+					category=entity.getValue();
+					context.put("category", category);
+					updateFlg = true;
 				}
 				System.out.println("Entity:" + entity.getEntity() + entity.getValue());
-			}
 		}
-		return contexts;
+		String timezone = (String)context.get("timezone");
+		if (null == timezone || timezone.isEmpty()) {
+			context.put("timezone", "Asia/Tokyo");
+		}
+		if (updateFlg) {
+			setContxetOfConversation(context);
+		}
     }
 
     private YoyakuConvEntity askConversation(Map<String,Object> context, String content) {
@@ -125,6 +169,7 @@ public class ReplyMessageHandler {
     }
 
     private String execute(String type,String mention,Map<String,Object> contexts,List<Entity> entities) throws Exception {
+    		mention ="aic";
     		StringBuffer buf = new StringBuffer();
     		if (type.equals("searchPlanTable")) {
     			String category = (String) contexts.get("category");
@@ -135,7 +180,7 @@ public class ReplyMessageHandler {
     			if (!dateto.isEmpty()) {
         			sysDate.add(dateto);
     			}
-    			Collection<PlanResult> plans = sqlexecuter.selectPlanResult(category,"aic",sysDate);
+    			Collection<PlanResult> plans = sqlexecuter.selectPlanResult(category,mention,sysDate);
     			if (plans.size() > 0) {
         			for(PlanResult plan:plans) {
         		        buf.append(plan.getResourceName() + ":" + plan.getUserName()+":" + plan.getStartTime()+":" + plan.getFinishTime()+"\n");
@@ -145,26 +190,11 @@ public class ReplyMessageHandler {
     		        buf.append("見つかりませんでした");
     			}
     		} else if (type.equals("selectRentalResource")) {
-        			String category = (String) contexts.get("category");
-        			Collection<PlanResult> plans = null;
-        			if (null == category || category.isEmpty()) {
-            			plans = sqlexecuter.selectRentalResource("aic");
-        			} else {
-            			plans = sqlexecuter.selectRentalResource(category,"aic");
-        			}
-        			if (plans.size() > 0) {
-            			for(PlanResult plan:plans) {
-            		        buf.append(plan.getResourceName() + ":" + plan.getUserName()+":" + plan.getStartTime()+":" + plan.getFinishTime()+"\n");
-            			}
-        			} else {
-        		        buf.append("見つかりませんでした");
-        			}
-    		} else if (type.equals("selectResource")) {
     			String rental = null;
     			String bihin = null;
     			String sysNumber = null;
     			for (Entity entity:entities) {
-    				if (entity.getEntity().equals("category")) {
+    				if (entity.getEntity().equals("category") && rental == null) {
     					rental=entity.getValue();
     				}
 
@@ -175,6 +205,48 @@ public class ReplyMessageHandler {
     				if (sysNumber == null && entity.getEntity().equals("sys-number")) {
     					sysNumber=entity.getValue();
     				}
+    			}
+    			if (null == rental || rental.isEmpty()) {
+    				rental = (String)contexts.get("category");
+    			}
+    			Collection<PlanResult> plans = null;
+    			if (null == rental || rental.isEmpty()) {
+        			plans = sqlexecuter.selectRentalResource(mention);
+    			} else {
+        			plans = sqlexecuter.selectRentalResource(rental,mention);
+    			}
+    			switch (plans.size()){
+				case 0:
+    		        buf.append("現在借りているものは見つかりませんでした");
+					break;
+				case 1:
+					PlanResult rs = plans.iterator().next();
+    		        buf.append("resourceId:" + rs.getResourceId() +":"+rs.getResourceName());
+					break;
+				default:
+        			for(PlanResult plan:plans) {
+        		        buf.append(plan.getResourceName() + ":" + plan.getStartTime()+"\n");
+        			}
+    			}
+    		} else if (type.equals("selectResource")) {
+    			String rental = null;
+    			String bihin = null;
+    			String sysNumber = null;
+    			for (Entity entity:entities) {
+    				if (entity.getEntity().equals("category") && rental == null) {
+    					rental=entity.getValue();
+    				}
+
+    				if (bihin == null && entity.getEntity().equals("bihin")) {
+    					bihin=entity.getValue();
+    				}
+
+    				if (sysNumber == null && entity.getEntity().equals("sys-number")) {
+    					sysNumber=entity.getValue();
+    				}
+    			}
+    			if (null == rental || rental.isEmpty()) {
+    				rental = (String)contexts.get("category");
     			}
     			Collection<Resource> resources = null;
 
@@ -208,6 +280,21 @@ public class ReplyMessageHandler {
     				time = d.format(f);
     			}
     			int plans = sqlexecuter.insertPlanResult(rental, "1", date + " " + time, date + " 9:00:00", dateto + " 17:30:00");
+    		} else if (type.equals("updatePlanResult")) {
+    			String rental = (String) contexts.get("rental");
+    			String userid = (String) contexts.get("userid");
+				DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+				LocalDateTime d = LocalDateTime.now();
+				String finishtime = d.format(f);
+    			int plans = sqlexecuter.updatePlanResult(rental, userid, finishtime);
+    		} else if (type.equals("selectUser")) {
+    			Collection<User> users = null;
+       			users = sqlexecuter.selectUser(mention);
+    			if (users.size() == 1) {
+        		    buf.append("userId:" + users.iterator().next().getId());
+    			} else {
+    		        buf.append("userId:-1");
+    			}
     		}
     	return buf.toString();
     }

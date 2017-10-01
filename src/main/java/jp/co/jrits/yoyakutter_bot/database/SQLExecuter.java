@@ -73,10 +73,10 @@ public class SQLExecuter {
 	public Collection<PlanResult> selectPlanResult() throws Exception {
 		Connection con = source.getConnection();
 		Statement state = con.createStatement();
-		ResultSet rset = state.executeQuery("SELECT b.name,c.name,a.use_start,a.finish FROM plan_result a join resource b on a.resource_id = b.id join user c on a.user_id = c.id");
+		ResultSet rset = state.executeQuery("SELECT b.id,b.name,c.name,DATE_FORMAT( a.use_start  , '%Y-%m-%d %H:%i'),a.finish FROM plan_result a join resource b on a.resource_id = b.id join user c on a.user_id = c.id");
         final Collection<PlanResult> names = new LinkedList<PlanResult>();
 		while(rset.next()) {
-            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4)));
+            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4),rset.getString(5)));
 		}
 		return names;
 
@@ -88,7 +88,7 @@ public class SQLExecuter {
 		ResultSet rset = state.executeQuery(sql);
         final Collection<PlanResult> names = new LinkedList<PlanResult>();
 		while(rset.next()) {
-            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4)));
+            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4),rset.getString(5)));
 		}
 		return names;
 
@@ -99,7 +99,7 @@ public class SQLExecuter {
 			return selectPlanResult(category,mention,sysDate.get(0));
 		}
 		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("SELECT b.name,c.name,a.use_start,a.finish FROM plan_result a join resource b on a.resource_id = b.id join user c on a.user_id = c.id and c.name = ? where DATE_FORMAT( a.use_start  , '%Y-%m-%d') between str_to_date( ? , '%Y-%m-%d') and str_to_date( ? , '%Y-%m-%d')");
+		PreparedStatement pstmt = con.prepareStatement("SELECT b.id,b.name,c.name,DATE_FORMAT( a.use_start  , '%Y-%m-%d %H:%i'),a.finish FROM plan_result a join resource b on a.resource_id = b.id join user c on a.user_id = c.id and c.name = ? where DATE_FORMAT( a.use_start  , '%Y-%m-%d') between str_to_date( ? , '%Y-%m-%d') and str_to_date( ? , '%Y-%m-%d')");
 		pstmt.setString(1, mention);
 		pstmt.setString(2, sysDate.get(0));
 		pstmt.setString(3, sysDate.get(1));
@@ -107,7 +107,7 @@ public class SQLExecuter {
 
         final Collection<PlanResult> names = new LinkedList<PlanResult>();
 		while(rset.next()) {
-            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4)));
+            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4),rset.getString(5)));
 		}
 		return names;
 
@@ -115,14 +115,14 @@ public class SQLExecuter {
 
 	public Collection<PlanResult> selectRentalResource(String category,String mention) throws Exception {
 		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("SELECT b.name,c.name,a.use_start,a.finish FROM plan_result a join resource b on a.finish is null and a.resource_id = b.id join user c on a.user_id = c.id and c.name = ? where b.resource_name like ?");
+		PreparedStatement pstmt = con.prepareStatement("SELECT b.id,b.name,c.name,DATE_FORMAT( a.use_start  , '%Y-%m-%d %H:%i'),a.finish FROM plan_result a join resource b on a.finish is null and a.resource_id = b.id join user c on a.user_id = c.id and c.name = ? where b.name like ?");
 		pstmt.setString(1, mention);
 		pstmt.setString(2, "%" + category + "%");
 		ResultSet rset = pstmt.executeQuery();
 
         final Collection<PlanResult> names = new LinkedList<PlanResult>();
 		while(rset.next()) {
-            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4)));
+            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4),rset.getString(5)));
 		}
 		return names;
 
@@ -130,13 +130,13 @@ public class SQLExecuter {
 
 	public Collection<PlanResult> selectRentalResource(String mention) throws Exception {
 		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("SELECT b.name,c.name,a.use_start,a.finish FROM plan_result a join resource b on a.finish is null and a.resource_id = b.id join user c on a.user_id = c.id and c.name = ?" );
+		PreparedStatement pstmt = con.prepareStatement("SELECT b.id,b.name,c.name,DATE_FORMAT( a.use_start  , '%Y-%m-%d %H:%i'),a.finish FROM plan_result a join resource b on a.finish is null and a.resource_id = b.id join user c on a.user_id = c.id and c.name = ?" );
 		pstmt.setString(1, mention);
 		ResultSet rset = pstmt.executeQuery();
 
         final Collection<PlanResult> names = new LinkedList<PlanResult>();
 		while(rset.next()) {
-            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4)));
+            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4),rset.getString(5)));
 		}
 		return names;
 
@@ -144,14 +144,14 @@ public class SQLExecuter {
 
 	public Collection<PlanResult> selectPlanResult(String category,String mention,String sysDate) throws Exception {
 		Connection con = source.getConnection();
-		PreparedStatement pstmt = con.prepareStatement("SELECT b.name,c.name,a.use_start,a.finish FROM plan_result a join resource b on a.resource_id = b.id join user c on a.user_id = c.id and c.name = ? where DATE_FORMAT( a.use_start  , '%Y-%m-%d')= str_to_date( ? , '%Y-%m-%d')");
+		PreparedStatement pstmt = con.prepareStatement("SELECT b.id,b.name,c.name,DATE_FORMAT( a.use_start  , '%Y-%m-%d %H:%i'),a.finish FROM plan_result a join resource b on a.resource_id = b.id join user c on a.user_id = c.id and c.name = ? where DATE_FORMAT( a.use_start  , '%Y-%m-%d')= str_to_date( ? , '%Y-%m-%d')");
 		pstmt.setString(1, mention);
 		pstmt.setString(2, sysDate);
 		ResultSet rset = pstmt.executeQuery();
 
         final Collection<PlanResult> names = new LinkedList<PlanResult>();
 		while(rset.next()) {
-            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4)));
+            names.add(new PlanResult(rset.getString(1),rset.getString(2),rset.getString(3),rset.getString(4),rset.getString(5)));
 		}
 		return names;
 
@@ -265,16 +265,26 @@ public class SQLExecuter {
 	}
 
 	public class PlanResult {
+		private String resourceId;
 		private String resourceName;
 		private String userName;
 		private String startTime;
 		private String finishTime;
 
-		PlanResult(String resourceName,String userName,String startTime,String finishTime) {
+		PlanResult(String resourceId,String resourceName,String userName,String startTime,String finishTime) {
+			this.resourceId=resourceId;
 			this.resourceName=resourceName;
 			this.userName=userName;
 			this.startTime=startTime;
 			this.finishTime=finishTime;
+		}
+
+		public String getResourceId() {
+			return resourceId;
+		}
+
+		public void setResourceId(String resourceId) {
+			this.resourceId = resourceId;
 		}
 
 		public String getResourceName() {
