@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -13,9 +12,6 @@ import java.util.ResourceBundle;
 
 import javax.sql.DataSource;
 
-import com.jcabi.jdbc.JdbcSession;
-import com.jcabi.jdbc.ListOutcome;
-import com.jcabi.jdbc.Outcome;
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
 import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
 
@@ -64,6 +60,7 @@ public class SQLExecuter {
 		ResultSet rset = pstmt.executeQuery();
         final Collection<Resource> names = new LinkedList<Resource>();
 		while(rset.next()) {
+	        System.out.println(rental +":" + bihinNumber);
             names.add(new Resource(rset.getInt(1),rset.getString(2),null));
 		}
 		return names;
@@ -179,39 +176,6 @@ public class SQLExecuter {
 		int rset = pstmt.executeUpdate();
 
 		return rset;
-	}
-
-	public Collection<String> select1() throws Exception {
-	    Collection<String> names = new JdbcSession(source)
-	    	      .sql("SELECT name FROM user")
-	    	      .select(
-	    	        new Outcome<Collection<String>>() {
-						@Override
-						public Collection<String> handle(ResultSet rset, Statement arg1) throws SQLException {
-		    	            final Collection<String> names = new LinkedList<String>();
-		    	            while (rset.next()) {
-		    	              names.add(rset.getString(1));
-		    	            }
-		    	            return names;
-						}
-	    	        }
-	    	      );
-	    return names;
-	}
-
-	public List<User> selectUser1() throws Exception {
-		 return new JdbcSession(source)
-				   .sql("SELECT * FROM user")
-				   .select(new ListOutcome<User>(
-				       new ListOutcome.Mapping<User>() {
-				         @Override
-				         public User map(final ResultSet rset) throws SQLException {
-				        	 System.out.println("*******************");
-				           return new User(rset.getInt(1), rset.getString(2));
-				         }
-				       }
-				     )
-				   );
 	}
 
 	private DataSource getDataSource() throws IOException {

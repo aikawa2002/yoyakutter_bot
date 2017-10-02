@@ -1,7 +1,6 @@
 package jp.co.jrits.yoyakutter_bot.main;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -12,12 +11,9 @@ import java.util.Map;
 import org.riversun.slacklet.SlackletRequest;
 import org.riversun.slacklet.SlackletResponse;
 import org.riversun.slacklet.SlackletSession;
-import org.riversun.xternal.simpleslackapi.SlackAttachment;
-import org.riversun.xternal.simpleslackapi.SlackUser;
 
 import com.ibm.watson.developer_cloud.conversation.v1.model.Entity;
 
-import javafx.collections.transformation.SortedList;
 import jp.co.jrits.yoyakutter_bot.database.SQLExecuter;
 import jp.co.jrits.yoyakutter_bot.database.SQLExecuter.PlanResult;
 import jp.co.jrits.yoyakutter_bot.database.SQLExecuter.Resource;
@@ -75,7 +71,6 @@ public class ReplyMessageHandler {
 		List<Entity> entities=nextConv.getEntities();
 		String type = (String) nextConv.getContext().get("type");
 
-        setContext(nextConv);
 		if (type != null && !type.isEmpty()) {
             try {
             	message = execute(type,mention,context,entities);
@@ -83,6 +78,7 @@ public class ReplyMessageHandler {
                     String[] ids = message.split(":");
                     context.put("rental", ids[1]);
                     context.put("rental_name", ids[2]);
+                    setContext(nextConv);
                     nextConv =setContxetOfConversation(context);
                     context = nextConv.getContext();
                     message = nextConv.getMessage();
@@ -90,6 +86,7 @@ public class ReplyMessageHandler {
                     String[] ids = message.split(":");
                     if (Integer.parseInt(ids[1]) > -1) {
                         context.put("userid", ids[1]);
+                        setContext(nextConv);
                         nextConv =setContxetOfConversation(context);
                         message = access(nextConv,mention);
                     } else {
@@ -102,6 +99,8 @@ public class ReplyMessageHandler {
     	        message = e.getMessage();
     		}
             context.put("type", "");
+        } else {
+            setContext(nextConv);
         }
     	return message;
     }
@@ -109,10 +108,10 @@ public class ReplyMessageHandler {
     private void setContext(YoyakuConvEntity nextConv) {
 		List<Entity> entities=nextConv.getEntities();
 
+        String date = (String)context.get("date");
 		String dateTo = (String)context.get("dateto");
 		String time = (String)context.get("time");
 		String timeTo = (String)context.get("timeto");
-		String date = (String)context.get("date");
 		String category = (String)context.get("category");
 		for(String key:context.keySet()) {
 			System.out.println("Context:" +key +":" +context.get(key));
@@ -123,15 +122,18 @@ public class ReplyMessageHandler {
 			int index2 = 0;
 			for (Entity entity:entities) {
 				if (entity.getEntity().equals("sys-date")) {
-					if (dateTo.isEmpty()) {
+                    if (date.isEmpty() || index == 0) {
+                          date=entity.getValue();
+                          context.put("date", date);
+                          updateFlg = true;
+                    } else if (dateTo.isEmpty()) {
 						if (index == 1 || !date.isEmpty()) {
 							dateTo=entity.getValue();
 							context.put("dateto", dateTo);
 							updateFlg = true;
-						} else {
-							index++;
 						}
 					}
+                    index++;
 				} else if (entity.getEntity().equals("sys-time")) {
 					if (timeTo.isEmpty()) {
 						if (index2 == 1 || !time.isEmpty()) {
