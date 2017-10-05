@@ -67,15 +67,7 @@ public class ReplyMessageHandler {
 			System.out.println("Context:" +key +":" +context.get(key));
 		}
 
-		if (type != null && !type.isEmpty()) {
-			message = access(nextConv,mention);
-		} else {
-            if (setContext(nextConv)) {
-                nextConv =setContxetOfConversation(context);
-                context=nextConv.getContext();
-            }
-			message = nextConv.getMessage();
-		}
+		message = access(nextConv,mention);
 
 		if (message != null) {
 			resp.reply(message);
@@ -88,44 +80,52 @@ public class ReplyMessageHandler {
 		List<Entity> entities=nextConv.getEntities();
 		String type = (String) nextConv.getContext().get("type");
 
-        try {
-        	message = execute(type,mention,context,entities);
-        	if (message.contains("resourceId")) {
-                String[] ids = message.split(":");
-                context.put("rental", ids[1]);
-                context.put("rental_name", ids[2]);
-                context.put("type", "");
-                message = setContext(nextConv,true);
-        	} else if (message.contains("userId")) {
-                String[] ids = message.split(":");
-                if (Integer.parseInt(ids[1]) > -1) {
-                    context.put("userid", ids[1]);
-                    context.put("type", "");
-                    setContext(nextConv,true);
-                    message = access(nextConv,mention);
-                } else {
-                    message = "Yoyakutter にユーザ未登録です。管理者に登録を依頼してください。";
-                }
-        	} else {
-                context.put("type", "");
-                setContext(nextConv,false);
-        	}
-		} catch (Exception e) {
-			// TODO 自動生成された catch ブロック
-			e.printStackTrace();
-	        message = e.getMessage();
+		if (type != null && !type.isEmpty()) {
+	        try {
+	        	message = execute(type,mention,context,entities);
+	        	if (message.contains("resourceId")) {
+	                String[] ids = message.split(":");
+	                context.put("rental", ids[1]);
+	                context.put("rental_name", ids[2]);
+	                context.put("type", "");
+	                message = setContext(nextConv,true).getMessage();
+	        	} else if (message.contains("userId")) {
+	                String[] ids = message.split(":");
+	                if (Integer.parseInt(ids[1]) > -1) {
+	                    context.put("userid", ids[1]);
+	                    context.put("type", "");
+	                    nextConv = setContext(nextConv,true);
+	                    message = access(nextConv,mention);
+	                } else {
+	                    message = "Yoyakutter にユーザ未登録です。管理者に登録を依頼してください。";
+	                }
+	        	} else {
+	                context.put("type", "");
+	                setContext(nextConv,false);
+	        	}
+			} catch (Exception e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+		        message = e.getMessage();
+			}
+		} else {
+            if (setContext(nextConv)) {
+                nextConv =setContxetOfConversation(context);
+                context=nextConv.getContext();
+            }
+			message = nextConv.getMessage();
 		}
     	return message;
     }
 
-    private String setContext(YoyakuConvEntity nextConv,boolean updateFlg) {
+    private YoyakuConvEntity setContext(YoyakuConvEntity nextConv,boolean updateFlg) {
     	boolean flg = setContext(nextConv);
         if (flg || updateFlg) {
             nextConv =setContxetOfConversation(context);
             context=nextConv.getContext();
         }
 
-		return nextConv.getMessage();
+		return nextConv;
     }
 
     private boolean setContext(YoyakuConvEntity nextConv) {
@@ -170,7 +170,7 @@ public class ReplyMessageHandler {
 					} else {
 						index2++;
 					}
-				} else if (entity.getEntity().equals("category") && category.isEmpty() && rental.isEmpty()) {
+				} else if (entity.getEntity().equals("category")) {
 					category=entity.getValue();
           			System.out.println("Set Context:category=" + category );
 					context.put("category", category);
@@ -301,12 +301,13 @@ public class ReplyMessageHandler {
     			String date= (String) contexts.get("date");
     			String dateto= (String) contexts.get("dateto");
     			String time = (String) contexts.get("time");
+    			String userid = (String) contexts.get("userid");
     			if (null == time || time.isEmpty()) {
     				DateTimeFormatter f = DateTimeFormatter.ofPattern("HH:mm:ss");
     				LocalDateTime d = LocalDateTime.now();
     				time = d.format(f);
     			}
-    			int plans = sqlexecuter.insertPlanResult(rental, "1", date + " " + time, date + " 9:00:00", dateto + " 17:30:00");
+    			int plans = sqlexecuter.insertPlanResult(rental, userid, date + " " + time, date + " 9:00:00", dateto + " 17:30:00");
     		} else if (type.equals("updatePlanResult")) {
     			String rental = (String) contexts.get("rental");
     			String userid = (String) contexts.get("userid");
