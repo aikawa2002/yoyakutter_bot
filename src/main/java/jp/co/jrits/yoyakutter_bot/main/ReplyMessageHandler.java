@@ -67,7 +67,7 @@ public class ReplyMessageHandler {
 			System.out.println("Context:" +key +":" +context.get(key));
 		}
 
-		message = access(nextConv,mention);
+		message = access(nextConv,mention,content);
 
 		if (message != null) {
 			resp.reply(message);
@@ -75,7 +75,7 @@ public class ReplyMessageHandler {
         session.setAttribute("context", context);
     }
 
-    private String access(YoyakuConvEntity nextConv,String mention) {
+    private String access(YoyakuConvEntity nextConv,String mention,String content) {
     	String message = null;
 		List<Entity> entities=nextConv.getEntities();
 		String type = (String) nextConv.getContext().get("type");
@@ -94,8 +94,8 @@ public class ReplyMessageHandler {
 	                if (Integer.parseInt(ids[1]) > -1) {
 	                    context.put("userid", ids[1]);
 	                    context.put("type", "");
-	                    nextConv = setContext(nextConv,true);
-	                    message = access(nextConv,mention);
+	                    nextConv = askConversation(context, content);
+	                    message = access(nextConv,mention,null);
 	                } else {
 	                    message = "Yoyakutter にユーザ未登録です。管理者に登録を依頼してください。";
 	                }
