@@ -12,7 +12,7 @@ public class YoyakuConversation {
     private ConversationService service;
 
 	public YoyakuConversation() {
-        service = new ConversationService(ConversationService.VERSION_DATE_2016_09_20,"9794e85e-b6d5-4301-b076-60ca6ce4c08c", "bhRpVPxWKLhk");
+        service = new ConversationService(ConversationService.VERSION_DATE_2016_09_20,"00093565-bfad-47e9-810c-2dc833c837bd", "wobY7ZI5eVeW");
 
 	}
 
@@ -24,7 +24,7 @@ public class YoyakuConversation {
         } else {
             newMessage = new MessageRequest.Builder().inputText(content).context(context).build();
         }
-        MessageResponse response = service.message("20f2334c-3c09-478e-a315-1dccef85ab77", newMessage).execute();
+        MessageResponse response = service.message("667686bb-d947-405f-8f11-c49402d28bb8", newMessage).execute();
         //MessageResponse response = service.message("66485b56-3f43-4c45-ada3-7ac2e99cb8e5", newMessage).execute();
 
 
@@ -38,7 +38,7 @@ public class YoyakuConversation {
 	public YoyakuConvEntity setContext(Map<String,Object>context) {
         // sync
         MessageRequest newMessage = new MessageRequest.Builder().context(context).build();
-        MessageResponse response = service.message("20f2334c-3c09-478e-a315-1dccef85ab77", newMessage).execute();
+        MessageResponse response = service.message("667686bb-d947-405f-8f11-c49402d28bb8", newMessage).execute();
         //MessageResponse response = service.message("66485b56-3f43-4c45-ada3-7ac2e99cb8e5", newMessage).execute();
 
 

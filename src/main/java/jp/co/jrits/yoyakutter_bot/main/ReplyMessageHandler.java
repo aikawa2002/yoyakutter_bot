@@ -102,6 +102,9 @@ public class ReplyMessageHandler {
 	        	} else {
 	                context.put("type", "");
 	                setContext(nextConv,false);
+	                if (message.length() == 0 ) {
+	                	message = nextConv.getMessage();
+	                }
 	        	}
 			} catch (Exception e) {
 				// TODO 自動生成された catch ブロック
@@ -157,16 +160,18 @@ public class ReplyMessageHandler {
 
                     index++;
 				} else if (entity.getEntity().equals("sys-time")) {
-                    if (time.isEmpty()) {
+                    if (null == time || time.isEmpty()) {
 						time=entity.getValue();
 						System.out.println("Set Context:time=" + time );
 						context.put("time", time);
 						updateFlg = true;
-                    } else if (index2 == 1 || timeTo.isEmpty()) {
-						timeTo=entity.getValue();
-              			System.out.println("Set Context:timeto=" + timeTo );
-						context.put("timeto", timeTo);
-						updateFlg = true;
+                    } else if (index2 == 1 || null == timeTo || timeTo.isEmpty()) {
+                    	if(!entity.getValue().equalsIgnoreCase(time)) {
+    						timeTo=entity.getValue();
+                  			System.out.println("Set Context:timeto=" + timeTo );
+    						context.put("timeto", timeTo);
+    						updateFlg = true;
+                    	}
 					} else {
 						index2++;
 					}
@@ -301,20 +306,24 @@ public class ReplyMessageHandler {
     			String date= (String) contexts.get("date");
     			String dateto= (String) contexts.get("dateto");
     			String time = (String) contexts.get("time");
+    			String timeto = (String) contexts.get("timeto");
     			String userid = (String) contexts.get("userid");
     			if (null == time || time.isEmpty()) {
     				DateTimeFormatter f = DateTimeFormatter.ofPattern("HH:mm:ss");
     				LocalDateTime d = LocalDateTime.now();
     				time = d.format(f);
     			}
-    			int plans = sqlexecuter.insertPlanResult(rental, userid, date + " " + time, date + " 9:00:00", dateto + " 17:30:00");
+    			if (null == timeto || timeto.isEmpty()) {
+    				timeto = "17:30:00";
+    			}
+    			sqlexecuter.insertPlanResult(rental, userid, date + " " + time, date + " " + time, dateto + " " + timeto);
     		} else if (type.equals("updatePlanResult")) {
     			String rental = (String) contexts.get("rental");
     			String userid = (String) contexts.get("userid");
 				DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 				LocalDateTime d = LocalDateTime.now();
 				String finishtime = d.format(f);
-    			int plans = sqlexecuter.updatePlanResult(rental, userid, finishtime);
+    			sqlexecuter.updatePlanResult(rental, userid, finishtime);
     		} else if (type.equals("selectUser")) {
     			Collection<User> users = null;
        			users = sqlexecuter.selectUser(mention);

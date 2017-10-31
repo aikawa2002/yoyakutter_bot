@@ -14,7 +14,7 @@ public class YoyakuVisualRecognition {
 
     public YoyakuVisualRecognition() {
 	    VisualRecognition service = new VisualRecognition(VisualRecognition.VERSION_DATE_2016_05_20);
-	    service.setApiKey("be8d30b3076015d2d4bd753d372fd5fa6b56483c");
+	    service.setApiKey("e605b4c76942f82cb378a969c7d4d8546bd15074");
     }
 
     public String classify(Path path) {
