@@ -57,7 +57,7 @@ public class ReplyMessageHandler {
         context = nextConv.getContext();
 
 		// メッセージを送信したユーザーのメンションを取得する
-		String mention = req.getUserDisp();
+		String mention = req.getSender().getUserName();
 
 		String type = (String) nextConv.getContext().get("type");
 
@@ -201,7 +201,6 @@ public class ReplyMessageHandler {
     }
 
     private String execute(String type,String mention,Map<String,Object> contexts,List<Entity> entities) throws Exception {
-    		mention ="aic";
     		StringBuffer buf = new StringBuffer();
     		if (type.equals("searchPlanTable")) {
     			String category = (String) contexts.get("category");
@@ -308,6 +307,7 @@ public class ReplyMessageHandler {
     			String time = (String) contexts.get("time");
     			String timeto = (String) contexts.get("timeto");
     			String userid = (String) contexts.get("userid");
+                String mode2 = (String) contexts.get("mode2");
     			if (null == time || time.isEmpty()) {
     				DateTimeFormatter f = DateTimeFormatter.ofPattern("HH:mm:ss");
     				LocalDateTime d = LocalDateTime.now();
@@ -316,7 +316,13 @@ public class ReplyMessageHandler {
     			if (null == timeto || timeto.isEmpty()) {
     				timeto = "17:30:00";
     			}
-    			sqlexecuter.insertPlanResult(rental, userid, date + " " + time, date + " " + time, dateto + " " + timeto);
+
+    			String useFrom = null;
+    			if (mode2.equalsIgnoreCase("rental")) {
+    			    useFrom = date + " " + time;
+    			}
+
+    			sqlexecuter.insertPlanResult(rental, userid, useFrom, date + " " + time, dateto + " " + timeto);
     		} else if (type.equals("updatePlanResult")) {
     			String rental = (String) contexts.get("rental");
     			String userid = (String) contexts.get("userid");
