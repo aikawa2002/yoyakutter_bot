@@ -67,6 +67,16 @@ public class SQLExecuter {
 
 	}
 
+    public int insertResource(String rentalName,String category) throws Exception {
+        Connection con = source.getConnection();
+        PreparedStatement pstmt = con.prepareStatement("insert into resource(no,name,type_id,mac_address,isTakeDisable,entry) select max(cast(no as signed)) + 1,?,?,'',0,'' from resource limit 1;");
+        pstmt.setString(1, rentalName);
+        pstmt.setString(2, category);
+        int rset = pstmt.executeUpdate();
+
+        return rset;
+    }
+
 	public Collection<PlanResult> selectPlanResult() throws Exception {
 		Connection con = source.getConnection();
 		Statement state = con.createStatement();
@@ -169,6 +179,7 @@ public class SQLExecuter {
 
 	public int updatePlanResult(String rental,String mention,String finish) throws Exception {
 		Connection con = source.getConnection();
+		System.out.println("resourceid="+rental+":useid="+mention);
 		PreparedStatement pstmt = con.prepareStatement("update plan_result set finish = str_to_date( ? , '%Y-%m-%d %H:%i:%S') where resource_id = ? and user_id = ? and finish is null");
 		pstmt.setString(1, finish);
 		pstmt.setString(2, rental);
