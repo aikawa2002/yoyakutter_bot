@@ -31,6 +31,8 @@ public class ReplyMessageHandler {
 	SQLExecuter sqlexecuter;
 	Exception exception;
 	private Map<String,Object> context;
+	private boolean mentionFlg;
+	private static final String BOTMENTION = "@yoyakutter_watson ";
 
     public ReplyMessageHandler() {
         yoyakuConv = new YoyakuConversation();
@@ -44,9 +46,13 @@ public class ReplyMessageHandler {
     }
 
     @SuppressWarnings("unchecked")
-	public void reply(SlackletRequest req ,SlackletResponse resp) throws IOException {
+	public void reply(SlackletRequest req ,SlackletResponse resp,boolean mensionFlg) throws IOException {
+        this.mentionFlg = mensionFlg;
 
         String content = req.getContent();
+        if (mensionFlg) {
+            content = content.replace(BOTMENTION, "");
+        }
 
         // セッションを取得する（セッションはユーザー毎に固有）
         SlackletSession session = req.getSession();
@@ -88,7 +94,7 @@ public class ReplyMessageHandler {
 	                context.put("rental", ids[1]);
 	                context.put("rental_name", ids[2]);
 	                context.put("type", "");
-	                message = setContext(nextConv,true).getMessage();
+	                message = getMessage(mention,setContext(nextConv,true).getMessage());
 	        	} else if (message.contains("userId")) {
 	                String[] ids = message.split(":");
 	                if (Integer.parseInt(ids[1]) > -1) {
@@ -103,7 +109,7 @@ public class ReplyMessageHandler {
 	                context.put("type", "");
 	                setContext(nextConv,false);
 	                if (message.length() == 0 ) {
-	                	message = nextConv.getMessage();
+	                	message = getMessage(mention,nextConv.getMessage());
 	                }
 	        	}
 			} catch (Exception e) {
@@ -116,9 +122,17 @@ public class ReplyMessageHandler {
                 nextConv =setContxetOfConversation(context);
                 context=nextConv.getContext();
             }
-			message = nextConv.getMessage();
+			message = getMessage(mention, nextConv.getMessage());
 		}
     	return message;
+    }
+
+    private String getMessage(String mention,String message) {
+        if (mentionFlg) {
+            return "<!@" + mention + "!> " + message;
+        }
+
+        return message;
     }
 
     private YoyakuConvEntity setContext(YoyakuConvEntity nextConv,boolean updateFlg) {

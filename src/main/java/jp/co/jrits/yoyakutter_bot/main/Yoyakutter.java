@@ -23,9 +23,10 @@ public class Yoyakutter {
 
             @Override
             public void onDirectMessagePosted(SlackletRequest req, SlackletResponse resp) {
+                boolean mensionFlg = false;
 
                 try {
-                    handler.reply(req, resp);
+                    handler.reply(req, resp,mensionFlg);
                 } catch (IOException e) {
                     // TODO 自動生成された catch ブロック
                     e.printStackTrace();
@@ -37,9 +38,10 @@ public class Yoyakutter {
             @Override
             public void onMentionedMessagePosted(SlackletRequest req, SlackletResponse resp) {
                 // あるチャンネルでこのBOTへのメンション付きメッセージがポストされた(例　「@smilebot おはよう」）
+                boolean mensionFlg = true;
 
                 try {
-                    handler.reply(req, resp);
+                    handler.reply(req, resp,mensionFlg);
                 } catch (IOException e) {
                     // TODO 自動生成された catch ブロック
                     e.printStackTrace();
