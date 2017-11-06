@@ -140,6 +140,7 @@ public class ReplyMessageHandler {
 		String timeTo = (String)context.get("timeto");
 		String category = (String)context.get("category");
 		String rental = (String)context.get("rental");
+        String typecategory = (String)context.get("typecategory");
 		boolean updateFlg = false;
 
 			int index = 0;
@@ -175,7 +176,7 @@ public class ReplyMessageHandler {
 					} else {
 						index2++;
 					}
-				} else if (entity.getEntity().equals("category")) {
+				} else if (entity.getEntity().equals("category") && null == typecategory) {
 					category=entity.getValue();
           			System.out.println("Set Context:category=" + category );
 					context.put("category", category);
@@ -300,6 +301,11 @@ public class ReplyMessageHandler {
         		        buf.append(resource.getResourceName() +"\n");
         			}
     			}
+    		} else if (type.equals("insertResource")) {
+                String rentalNumber = (String) contexts.get("rentalnumber");
+                String rentalName= (String) contexts.get("rentalname");
+                String category= (String) contexts.get("typecategory");
+                sqlexecuter.insertResource(rentalNumber + " " + rentalName, category);
     		} else if (type.equals("insertPlanTable")) {
     			String rental = (String) contexts.get("rental");
     			String date= (String) contexts.get("date");
