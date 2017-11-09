@@ -51,6 +51,21 @@ public class SQLExecuter {
 
 	}
 
+	public Collection<Resource> selectUsingdevice(String rental, String date) throws Exception  {
+		Connection con = source.getConnection();
+		PreparedStatement pstmt = con.prepareStatement("SELECT a.id,a.name FROM resource a join type_master on a.type_id = type_master.id and (a.name like ? or type_master.name like ?) where not exists (SELECT * FROM plan_result c where c.resource_id = a.id and DATE_FORMAT( c.use_start  , '%Y-%m-%d') <= str_to_date( ? , '%Y-%m-%d') and c.finish is null)");
+		pstmt.setString(1, "%" + rental + "%");
+		pstmt.setString(2, "%" + rental + "%");
+		pstmt.setString(3, date);
+		System.out.println("selectUsingdevice:" + rental);
+		ResultSet rset = pstmt.executeQuery();
+        final Collection<Resource> names = new LinkedList<Resource>();
+		while(rset.next()) {
+            names.add(new Resource(rset.getInt(1),rset.getString(2),null));
+		}
+		return names;
+	}
+
 	public Collection<Resource> selectResource(String bihinNumber,String rental) throws Exception {
 		Connection con = source.getConnection();
 		PreparedStatement pstmt = con.prepareStatement("SELECT resource.id,resource.name FROM resource where resource.name like ? and resource.name like ?");

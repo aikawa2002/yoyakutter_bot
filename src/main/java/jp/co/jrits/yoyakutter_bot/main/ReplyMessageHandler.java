@@ -235,6 +235,17 @@ public class ReplyMessageHandler {
     			} else {
     		        buf.append("見つかりませんでした");
     			}
+    		} else if (type.equals("isusingdevice")) {
+    			String rental = (String) contexts.get("rental");
+    			String date= (String) contexts.get("date");
+    			Collection<Resource> plans = sqlexecuter.selectUsingdevice(rental,date);
+    			if (plans.size() > 0) {
+        			for(Resource plan:plans) {
+        		        buf.append(plan.getResourceName()+"\n");
+        			}
+    			} else {
+    		        buf.append("見つかりませんでした");
+    			}
     		} else if (type.equals("selectRentalResource")) {
     			String rental = null;
     			String bihin = null;
