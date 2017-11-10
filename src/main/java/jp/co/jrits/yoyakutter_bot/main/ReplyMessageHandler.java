@@ -32,7 +32,7 @@ public class ReplyMessageHandler {
 	Exception exception;
 	private Map<String,Object> context;
 	private boolean mentionFlg;
-	private static final String BOTMENTION = "@yoyakutter_watson ";
+	private static final String BOTMENTION = "<@U7TF7QABZ> ";
 
     public ReplyMessageHandler() {
         yoyakuConv = new YoyakuConversation();
@@ -64,6 +64,7 @@ public class ReplyMessageHandler {
 
 		// メッセージを送信したユーザーのメンションを取得する
 		String mention = req.getSender().getUserName();
+        String userDisp = req.getUserDisp();
 
 		String type = (String) nextConv.getContext().get("type");
 
@@ -73,7 +74,7 @@ public class ReplyMessageHandler {
 			System.out.println("Context:" +key +":" +context.get(key));
 		}
 
-		message = access(nextConv,mention,content);
+		message = access(nextConv,mention,content,userDisp);
 
 		if (message != null) {
 			resp.reply(message);
@@ -81,7 +82,7 @@ public class ReplyMessageHandler {
         session.setAttribute("context", context);
     }
 
-    private String access(YoyakuConvEntity nextConv,String mention,String content) {
+    private String access(YoyakuConvEntity nextConv,String mention,String content, String userDisp) {
     	String message = null;
 		List<Entity> entities=nextConv.getEntities();
 		String type = (String) nextConv.getContext().get("type");
@@ -94,14 +95,14 @@ public class ReplyMessageHandler {
 	                context.put("rental", ids[1]);
 	                context.put("rental_name", ids[2]);
 	                context.put("type", "");
-	                message = getMessage(mention,setContext(nextConv,true).getMessage());
+	                message = getMessage(userDisp,setContext(nextConv,true).getMessage());
 	        	} else if (message.contains("userId")) {
 	                String[] ids = message.split(":");
 	                if (Integer.parseInt(ids[1]) > -1) {
 	                    context.put("userid", ids[1]);
 	                    context.put("type", "");
 	                    nextConv = askConversation(context, content);
-	                    message = access(nextConv,mention,null);
+	                    message = access(nextConv,mention,null,userDisp);
 	                } else {
 	                    message = "Yoyakutter にユーザ未登録です。管理者に登録を依頼してください。";
 	                }
@@ -109,7 +110,7 @@ public class ReplyMessageHandler {
 	                context.put("type", "");
 	                setContext(nextConv,false);
 	                if (message.length() == 0 ) {
-	                	message = getMessage(mention,nextConv.getMessage());
+	                	message = getMessage(userDisp,nextConv.getMessage());
 	                }
 	        	}
 			} catch (Exception e) {
@@ -122,14 +123,14 @@ public class ReplyMessageHandler {
                 nextConv =setContxetOfConversation(context);
                 context=nextConv.getContext();
             }
-			message = getMessage(mention, nextConv.getMessage());
+			message = getMessage(userDisp, nextConv.getMessage());
 		}
     	return message;
     }
 
-    private String getMessage(String mention,String message) {
+    private String getMessage(String userDisp,String message) {
         if (mentionFlg) {
-            return "<!@" + mention + "!> " + message;
+            return userDisp + " " + message;
         }
 
         return message;
