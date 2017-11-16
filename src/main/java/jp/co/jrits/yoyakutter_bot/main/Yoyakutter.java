@@ -12,8 +12,6 @@ public class Yoyakutter {
 
     public static void main(String[] args) throws IOException {
 
-    	ReplyMessageHandler handler = new ReplyMessageHandler();
-
         String botToken = ResourceBundle.getBundle("credentials").getString("slack.bot_api_token");
 
         SlackletService slackService = new SlackletService(botToken);
@@ -26,6 +24,7 @@ public class Yoyakutter {
                 boolean mensionFlg = false;
 
                 try {
+                    ReplyMessageHandler handler = new ReplyMessageHandler();
                     handler.reply(req, resp,mensionFlg);
                 } catch (IOException e) {
                     // TODO 自動生成された catch ブロック
@@ -41,6 +40,7 @@ public class Yoyakutter {
                 boolean mensionFlg = true;
 
                 try {
+                    ReplyMessageHandler handler = new ReplyMessageHandler();
                     handler.reply(req, resp,mensionFlg);
                 } catch (IOException e) {
                     // TODO 自動生成された catch ブロック
