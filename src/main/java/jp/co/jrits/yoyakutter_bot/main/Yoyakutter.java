@@ -26,7 +26,8 @@ public class Yoyakutter {
             public void onDirectMessagePosted(SlackletRequest req, SlackletResponse resp) {
             	String oContent = sessionMap.get(req.getSession());
             	if (oContent == null || !oContent.equals(req.getContent())) {
-            		sessionMap.put(req.getSession(), req.getContent());
+                    System.out.println("###" + req.getSender().getRealName() + "#########################");
+                    sessionMap.put(req.getSession(), req.getContent());
 
 	                boolean mensionFlg = false;
 
@@ -45,7 +46,8 @@ public class Yoyakutter {
                 // あるチャンネルでこのBOTへのメンション付きメッセージがポストされた(例　「@smilebot おはよう」）
             	String oContent = sessionMap.get(req.getSession());
             	if (oContent == null || !oContent.equals(req.getContent())) {
-            		sessionMap.put(req.getSession(), req.getContent());
+                    System.out.println("$$$" + req.getSender().getRealName() + "$$$$$$$$$$$$$$$$$$$$$$$$$");
+                    sessionMap.put(req.getSession(), req.getContent());
 	                boolean mensionFlg = true;
 
 	                try {
